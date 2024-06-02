@@ -1,8 +1,12 @@
 import "./List.css";
 import TodoItem from "./TodoItem";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useContext } from "react";
+import { TodoStateContext } from "../App";
 
-const List = ({ todos, onUpdate, onDelete }) => {
+const List = () => {
+  const todos = useContext(TodoStateContext);
+  // 원래 객체로 todos를 뭉쳐서 가져와서 구조분해 할당을 했지만 props로 todos 자체를 보내고있어서 todos는 배열임
+  // console.log(Array.isArray(todos));  ==> true
   const [search, setSearch] = useState("");
   const onChangeSearch = (e) => {
     setSearch(e.target.value);
@@ -43,14 +47,7 @@ const List = ({ todos, onUpdate, onDelete }) => {
       />
       <div className="todos_wrapper">
         {filteredTodos.map((todo) => {
-          return (
-            <TodoItem
-              key={todo.id}
-              {...todo}
-              onUpdate={onUpdate}
-              onDelete={onDelete}
-            />
-          );
+          return <TodoItem key={todo.id} {...todo} />;
         })}
       </div>
     </div>
