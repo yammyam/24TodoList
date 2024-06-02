@@ -1,5 +1,11 @@
 import "./App.css";
-import { useState, useRef, useReducer } from "react";
+import {
+  useState,
+  useRef,
+  useReducer,
+  useCallback,
+  createContext,
+} from "react";
 import Header from "./components/Header";
 import Editor from "./components/Editor";
 import List from "./components/List";
@@ -24,6 +30,7 @@ const mockData = [
     date: new Date().getTime(),
   },
 ];
+
 function reducer(state, action) {
   switch (action.type) {
     case "CREATE":
@@ -38,11 +45,12 @@ function reducer(state, action) {
       return state;
   }
 }
+
 function App() {
   const [todos, dispatch] = useReducer(reducer, mockData);
   const isRef = useRef(3);
 
-  const onCreate = (content) => {
+  const onCreate = useCallback((content) => {
     dispatch({
       type: "CREATE",
       data: {
@@ -52,23 +60,23 @@ function App() {
         date: new Date().getTime(),
       },
     });
-  };
+  }, []);
 
-  const onUpdate = (targetId) => {
+  const onUpdate = useCallback((targetId) => {
     // todos State값들 중에
     // targetId와 일치하는 id를 갖는 투두 아이템의 isDone 변경
     dispatch({
       type: "UPDATE",
       targetId: targetId,
     });
-  };
+  }, []);
 
-  const onDelete = (targetId) => {
+  const onDelete = useCallback((targetId) => {
     dispatch({
       type: "DELETE",
       targetId: targetId,
     });
-  };
+  }, []); //뎁스가 변경되었을때만 함수를 다시 생성하도록 바꿈
 
   return (
     <div className="App">
