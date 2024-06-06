@@ -6,53 +6,66 @@ import {
   useCallback,
   createContext,
   useMemo,
+  useEffect,
 } from "react";
 import Header from "./components/Header";
 import Editor from "./components/Editor";
 import List from "./components/List";
 
-const mockData = [
-  {
-    id: 0,
-    isDone: false,
-    content: "React공부하기",
-    date: new Date().getTime(),
-  },
-  {
-    id: 1,
-    isDone: false,
-    content: "빨래하기",
-    date: new Date().getTime(),
-  },
-  {
-    id: 2,
-    isDone: false,
-    content: "운동하기",
-    date: new Date().getTime(),
-  },
-];
-
 function reducer(state, action) {
+  let nextState;
+
   switch (action.type) {
+    case "INIT":
+      return action.data;
     case "CREATE":
-      return [action.data, ...state];
+      nextState = [action.data, ...state];
+      break;
     case "UPDATE":
-      return state.map((item) =>
-        item.id === action.targetId ? { ...item, isDone: !item.isDone } : item
+      nextState = state.map((item) =>
+        String(item.id) === String(action.targetId)
+          ? { ...item, isDone: !item.isDone }
+          : item
       );
+      break;
     case "DELETE":
-      return state.filter((item) => item.id !== action.targetId);
+      nextState = state.filter((item) => item.id !== action.targetId);
+      break;
     default:
       return state;
   }
+  localStorage.setItem("myWork", JSON.stringify(nextState));
+  return nextState;
 }
 
 export const TodoStateContext = createContext();
 export const TodoDispatchContext = createContext();
 
 function App() {
-  const [todos, dispatch] = useReducer(reducer, mockData);
-  const isRef = useRef(3);
+  const [isLoading, setIsLoading] = useState(true);
+  const [todos, dispatch] = useReducer(reducer, []);
+  const isRef = useRef(0);
+  useEffect(() => {
+    const storedData = localStorage.getItem("myWork");
+    if (!storedData) {
+      setIsLoading(false);
+      return;
+    }
+    const parsedData = JSON.parse(storedData);
+    if (!Array.isArray(parsedData)) {
+      setIsLoading(false);
+      return;
+    }
+    let maxId = 0;
+    parsedData.forEach((item) => {
+      if (Number(item.id) > maxId) {
+        maxId = Number(item.id);
+      }
+    });
+    isRef.current = maxId + 1;
+    dispatch({ type: "INIT", data: parsedData });
+    setIsLoading(false);
+  }, []);
 
   const onCreate = useCallback((content) => {
     dispatch({
@@ -86,6 +99,9 @@ function App() {
     return { onCreate, onDelete, onUpdate };
   }, []);
 
+  if (isLoading) {
+    return <div>데이터 로딩 중 입니다...</div>;
+  }
   return (
     <div className="App">
       <Header />
